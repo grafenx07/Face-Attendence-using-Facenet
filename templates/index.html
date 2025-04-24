@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construction Site Attendance System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #000;
+            color: #fff;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #121212;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+        h1, h2 {
+            color: #fff;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+        }
+        .tab {
+            padding: 10px 20px;
+            background-color: #333;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+            cursor: pointer;
+            color: #ccc;
+        }
+        .tab.active {
+            background-color: #fff;
+            color: #000;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background-color: #1a1a1a;
+            border-radius: 0 0 5px 5px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #ccc;
+        }
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background-color: #2a2a2a;
+            color: #fff;
+        }
+        select {
+            cursor: pointer;
+        }
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #fff;
+        }
+        button {
+            background-color: #fff;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background-color: #ccc;
+        }
+        button:disabled {
+            background-color: #555;
+            color: #888;
+            cursor: not-allowed;
+        }
+        .hidden {
+            display: none;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 5px;
+            border: 2px solid #fff;
+        }
+        #video, #videoAttendance {
+            width: 100%;
+            border-radius: 5px;
+        }
+        .face-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            border: 3px dashed #666;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .face-guide.detected {
+            border-color: #fff;
+        }
+        .face-label {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            color: white;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .face-status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #333;
+            color: #ccc;
+            text-align: center;
+        }
+        .face-status.detected {
+            background-color: #fff;
+            color: #000;
+        }
+        .progress-container {
+            margin-top: 15px;
+            background-color: #333;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 20px;
+            background-color: #fff;
+            text-align: center;
+            line-height: 20px;
+            color: #000;
+            transition: width 0.3s;
+        }
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            color: #ccc;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #333;
+            text-align: left;
+        }
+        th {
+            background-color: #333;
+            color: #fff;
+        }
+        tr:nth-child(even) {
+            background-color: #222;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .success {
+            background-color: #1a1a1a;
+            border-left: 4px solid #fff;
+            color: #fff;
+        }
+        .error {
+            background-color: #1a1a1a;
+            border-left: 4px solid #888;
+            color: #888;
+        }
+        .info {
+            background-color: #1a1a1a;
+            border-left: 4px solid #666;
+            color: #ccc;
+        }
+        footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+        .time-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .time-btn {
+            min-width: 120px;
+        }
+        .status-selector {
+            margin: 15px 0;
+        }
+        .optional-fields {
+            padding: 10px;
+            background-color: #222;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .optional-fields h3 {
+            margin-bottom: 10px;
+            color: #ccc;
+            font-size: 16px;
+        }
+        .system-status {
+            padding: 10px;
+            margin-bottom: 20px;
+            background-color: #222;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .system-status ul {
+            list-style-type: none;
+            padding-left: 10px;
+        }
+        .system-status li {
+            margin: 5px 0;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-ok {
+            background-color: #4CAF50;
+        }
+        .status-warn {
+            background-color: #FF9800;
+        }
+        .status-error {
+            background-color: #F44336;
+        }
+        .worker-list {
+            margin-top: 15px;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+        .worker-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #333;
+        }
+        .worker-item:hover {
+            background-color: #222;
+        }
+        .worker-info {
+            flex: 1;
+        }
+        .worker-name {
+            font-weight: bold;
+            color: #fff;
+        }
+        .worker-details {
+            color: #ccc;
+            font-size: 14px;
+        }
+        .date-selector {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            align-items: center;
+        }
+        input[type="date"] {
+            background-color: #2a2a2a;
+            color: #fff;
+            border: 1px solid #333;
+            padding: 8px;
+            border-radius: 5px;
+        }
+        .face-scan-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        .face-preview-img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border: 1px solid #444;
+            border-radius: 5px;
+        }
+        .capture-help {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #aaa;
+            text-align: center;
+        }
+        .quality-indicator {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        .quality-bar {
+            width: 150px;
+            height: 10px;
+            background-color: #333;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .quality-level {
+            height: 100%;
+            width: 0%;
+            background-color: #666;
+            transition: width 0.3s, background-color 0.3s;
+        }
+        .quality-text {
+            font-size: 12px;
+            color: #aaa;
+        }
+        .auto-capture-status {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+        .capture-count {
+            font-weight: bold;
+            color: #fff;
+        }
+        .cancel-btn {
+            background-color: #F44336;
+            color: #fff;
+        }
+        .cancel-btn:hover {
+            background-color: #D32F2F;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Construction Site Attendance System</h1>
+
+        <div class="system-status" id="systemStatus">
+            <h3>System Status</h3>
+            <ul>
+                <li><span class="status-indicator" id="dbStatus"></span> Database Connection</li>
+                <li><span class="status-indicator" id="modelStatus"></span> Face Recognition Model</li>
+                <li><span class="status-indicator" id="cameraStatus"></span> Camera Access</li>
+                <li>Total Workers: <span id="workerCount">0</span></li>
+            </ul>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="registration">Registration</div>
+            <div class="tab" data-tab="attendance">Attendance</div>
+            <div class="tab" data-tab="workers">Workers</div>
+        </div>
+
+        <div class="tab-content active" id="registration-tab">
+            <div class="message info" id="message1">1) Register Worker >>> 2) Auto Face Capture >>> 3) Save Profile</div>
+
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="workerType">Worker Type:</label>
+                    <select id="workerType" required>
+                        <option value="">Select Worker Type</option>
+                        <option value="carpenter">Carpenter</option>
+                        <option value="plumber">Plumber</option>
+                        <option value="mason">Mason</option>
+                        <option value="welder">Welder</option>
+                        <option value="electrician">Electrician</option>
+                        <option value="truckdriver">Truck Driver</option>
+                        <option value="securityguard">Security Guard</option>
+                        <option value="generallaborer">General Laborer</option>
+                        <option value="craneoperator">Crane Operator</option>
+                        <option value="sitesupervisor">Site Supervisor</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="workerId">Worker ID:</label>
+                    <input type="text" id="workerId" placeholder="Enter Worker ID" required>
+                </div>
+                <div class="form-group">
+                    <label for="nameInput">Worker Name:</label>
+                    <input type="text" id="nameInput" placeholder="Enter Worker Name" required>
+                </div>
+
+                <button type="submit" id="registerBtn">Register Worker</button>
+            </form>
+
+            <div id="captureContainer" class="hidden">
+                <div class="video-container">
+                    <video id="video" autoplay playsinline></video>
+                    <div class="face-guide" id="faceGuide">
+                        <div class="face-label">Position Face Here</div>
+                    </div>
+                </div>
+
+                <div id="faceStatus" class="face-status">Face Not Detected</div>
+
+                <div class="quality-indicator">
+                    <div class="quality-bar">
+                        <div class="quality-level" id="qualityLevel"></div>
+                    </div>
+                    <span class="quality-text" id="qualityText">Poor</span>
+                </div>
+
+                <div class="auto-capture-status" id="autoCaptureStatus">
+                    <div>Auto-capturing face images when quality is good</div>
+                    <div>Images: <span id="captureCount" class="capture-count">0</span>/5</div>
+                </div>
+
+                <div class="capture-help">
+                    For best results, ensure good lighting and face the camera directly
+                </div>
+
+                <div class="controls">
+                    <button id="cancelCaptureBtn" class="cancel-btn">Cancel</button>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar">0%</div>
+                </div>
+
+                <div class="face-scan-preview" id="faceScanPreview">
+                    <!-- Captured images will appear here -->
+                </div>
+
+                <button id="saveProfileBtn" class="hidden">Register Face Profile</button>
+            </div>
+        </div>
+
+        <div class="tab-content" id="attendance-tab">
+            <div class="video-container">
+                <video id="videoAttendance" autoplay playsinline></video>
+                <div class="face-guide" id="faceGuideAttendance">
+                    <div class="face-label">Position Face Here</div>
+                </div>
+            </div>
+
+            <div id="faceStatusAttendance" class="face-status">Face Not Detected</div>
+
+            <div class="controls">
+                <button id="recognizeBtn" disabled>Recognize</button>
+                <button id="autoRecognizeBtn">Auto Recognition</button>
+            </div>
+
+            <div id="attendanceMessage" class="message info">Ready to recognize workers</div>
+
+            <h2>Recent Attendance Records</h2>
+            <div class="date-selector">
+                <label for="dateSelector">Date:</label>
+                <input type="date" id="dateSelector">
+                <button id="refreshAttendanceBtn">Refresh</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Worker ID</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceData">
+                    <!-- Attendance records will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="tab-content" id="workers-tab">
+            <h2>Worker Directory</h2>
+            <div class="controls">
+                <button id="refreshWorkersBtn">Refresh Workers</button>
+                <button id="exportWorkersBtn">Export Data</button>
+            </div>
+            <div class="worker-list" id="workerList">
+                <!-- Worker list will be inserted here -->
+            </div>
+        </div>
+    </div>
+    <footer>Construction Site Attendance System &copy; 2025</footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const registerForm = document.getElementById('registerForm');
+            const captureContainer = document.getElementById('captureContainer');
+            const video = document.getElementById('video');
+            const videoAttendance = document.getElementById('videoAttendance');
+            const cancelCaptureBtn = document.getElementById('cancelCaptureBtn');
+            const progressBar = document.getElementById('progressBar');
+            const captureCountElement = document.getElementById('captureCount');
+            const saveProfileBtn = document.getElementById('saveProfileBtn');
+            const recognizeBtn = document.getElementById('recognizeBtn');
+            const autoRecognizeBtn = document.getElementById('autoRecognizeBtn');
+            const faceGuide = document.getElementById('faceGuide');
+            const faceStatus = document.getElementById('faceStatus');
+            const faceGuideAttendance = document.getElementById('faceGuideAttendance');
+            const faceStatusAttendance = document.getElementById('faceStatusAttendance');
+            const attendanceMessage = document.getElementById('attendanceMessage');
+            const dateSelector = document.getElementById('dateSelector');
+            const refreshAttendanceBtn = document.getElementById('refreshAttendanceBtn');
+            const refreshWorkersBtn = document.getElementById('refreshWorkersBtn');
+            const exportWorkersBtn = document.getElementById('exportWorkersBtn');
+            const faceScanPreview = document.getElementById('faceScanPreview');
+            const qualityLevel = document.getElementById('qualityLevel');
+            const qualityText = document.getElementById('qualityText');
+            const autoCaptureStatus = document.getElementById('autoCaptureStatus');
+
+            // System status elements
+            const dbStatus = document.getElementById('dbStatus');
+            const modelStatus = document.getElementById('modelStatus');
+            const cameraStatus = document.getElementById('cameraStatus');
+            const workerCount = document.getElementById('workerCount');
+
+            // Global variables
+            let currentWorkerId = null;
+            let currentWorkerName = null;
+            let currentWorkerType = null;
+            let faceDetectionInterval = null;
+            let autoRecognizeInterval = null;
+            let faceDetected = false;
+            let faceDetectedAttendance = false;
+            let stream = null;
+            let capturedImages = [];
+            let faceQuality = 0;
+            let isAutoRecognizing = false;
+            let isAutoCapturing = false;
+            let isProcessingRecognition = false;
+            let lastCaptureTime = 0;
+            let lastRecognitionTime = 0;
+            const MAX_IMAGES = 5; // Number of face images to capture
+            const CAPTURE_DELAY = 1000; // Minimum milliseconds between captures
+            const QUALITY_THRESHOLD = 0.5; // Minimum quality score for auto-capture
+            const RECOGNITION_COOLDOWN = 3000; // Milliseconds between recognition attempts
+
+            // Set today's date as default for date selector
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            dateSelector.value = formattedDate;
+
+            // Check system status on load
+            checkSystemStatus();
+
+            // Tab switching
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(tc => tc.classList.remove('active'));
+
+                    this.classList.add('active');
+                    document.getElementById(`${this.getAttribute('data-tab')}-tab`).classList.add('active');
+
+                    // Stop auto recognition if switching away from attendance tab
+                    if (isAutoRecognizing && this.getAttribute('data-tab') !== 'attendance') {
+                        stopAutoRecognize();
+                    }
+
+                    // Stop auto capture if switching away from registration tab
+                    if (isAutoCapturing && this.getAttribute('data-tab') !== 'registration') {
+                        isAutoCapturing = false;
+                    }
+
+                    // Initialize video for the active tab
+                    if (this.getAttribute('data-tab') === 'registration') {
+                        initializeVideo(video);
+                    } else if (this.getAttribute('data-tab') === 'attendance') {
+                        initializeVideo(videoAttendance);
+                        updateAttendanceTable();
+                    } else if (this.getAttribute('data-tab') === 'workers') {
+                        loadWorkers();
+                        // Stop any ongoing video stream to save resources
+                        if (stream) {
+                            stream.getTracks().forEach(track => track.stop());
+                        }
+                    }
+                });
+            });
+
+            // System status check
+            function checkSystemStatus() {
+                fetch('/system_status')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // Database status
+                            if (data.database_connected) {
+                                dbStatus.className = 'status-indicator status-ok';
+                            } else {
+                                dbStatus.className = 'status-indicator status-error';
+                            }
+
+                            // Model status
+                            if (data.model_loaded) {
+                                modelStatus.className = 'status-indicator status-ok';
+                            } else if (data.tensorflow_available) {
+                                modelStatus.className = 'status-indicator status-warn';
+                            } else {
+                                modelStatus.className = 'status-indicator status-error';
+                            }
+
+                            // Worker count
+                            workerCount.textContent = data.worker_count || '0';
+                        } else {
+                            dbStatus.className = 'status-indicator status-error';
+                            modelStatus.className = 'status-indicator status-error';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking system status:', error);
+                        dbStatus.className = 'status-indicator status-error';
+                        modelStatus.className = 'status-indicator status-error';
+                        showErrorMessage('Failed to connect to server. Please check if the server is running.');
+                    });
+            }
+
+            // Initialize video stream with error handling and retries
+            async function initializeVideo(videoElement) {
+                try {
+                    // Stop any existing stream
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+
+                    // Get new stream with more specific constraints
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: { ideal: 640 },
+                            height: { ideal: 480 },
+                            facingMode: 'user',
+                            frameRate: { ideal: 30 }
+                        },
+                        audio: false
+                    });
+
+                    videoElement.srcObject = stream;
+                    cameraStatus.className = 'status-indicator status-ok';
+
+                    // Add event listener to ensure video is playing
+                    videoElement.onloadedmetadata = function() {
+                        videoElement.play().catch(e => {
+                            console.error('Error playing video:', e);
+                            cameraStatus.className = 'status-indicator status-error';
+                            showErrorMessage('Failed to play video stream. Please reload the page and try again.');
+                        });
+                    };
+
+                    // Start face detection after successful setup
+                    if (videoElement === video) {
+                        startFaceDetection();
+                    } else if (videoElement === videoAttendance) {
+                        startFaceDetectionAttendance();
+                    }
+                } catch (error) {
+                    console.error('Error accessing webcam:', error);
+                    cameraStatus.className = 'status-indicator status-error';
+
+                    // Show a more detailed and helpful error message
+                    let errorMsg = 'Failed to access webcam. ';
+                    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                        errorMsg += 'Please allow camera access in your browser and reload the page.';
+                    } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                        errorMsg += 'No camera found. Please connect a camera and reload the page.';
+                    } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                        errorMsg += 'Your camera might be in use by another application. Please close other applications and reload.';
+                    } else if (error.name === 'OverconstrainedError') {
+                        errorMsg += 'Camera constraints cannot be satisfied. Please reload and try again with default settings.';
+                    } else {
+                        errorMsg += 'Please check your camera connection and browser settings, then reload the page.';
+                    }
+
+                    showErrorMessage(errorMsg);
+
+                    // Try again with less specific constraints if there was an error
+                    setTimeout(() => {
+                        retryVideoInitialization(videoElement);
+                    }, 3000);
+                }
+            }
+
+            // Retry video initialization with simpler constraints
+            async function retryVideoInitialization(videoElement) {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: true,
+                        audio: false
+                    });
+
+                    videoElement.srcObject = stream;
+                    cameraStatus.className = 'status-indicator status-warn';
+
+                    videoElement.onloadedmetadata = function() {
+                        videoElement.play().catch(e => {
+                            console.error('Error playing video on retry:', e);
+                            cameraStatus.className = 'status-indicator status-error';
+                        });
+                    };
+
+                    // Start face detection with the simpler stream
+                    if (videoElement === video) {
+                        startFaceDetection();
+                    } else if (videoElement === videoAttendance) {
+                        startFaceDetectionAttendance();
+                    }
+
+                    showInfoMessage('Camera initialized with basic settings. Face detection quality may be reduced.');
+                } catch (error) {
+                    console.error('Error on video retry:', error);
+                    cameraStatus.className = 'status-indicator status-error';
+                    showErrorMessage('Could not access camera after multiple attempts. Please check browser permissions and hardware connections.');
+                }
+            }
+
+            // Show error message in UI
+            function showErrorMessage(message) {
+                console.error(message); // Log to console for debugging
+
+                const errorElement = document.createElement('div');
+                errorElement.className = 'message error';
+                errorElement.textContent = message;
+
+                // Find appropriate place to show message based on active tab
+                const activeTab = document.querySelector('.tab-content.active');
+                if (activeTab) {
+                    const existingMsg = activeTab.querySelector('.message.error');
+                    if (existingMsg) {
+                        existingMsg.textContent = message;
+                    } else {
+                        const targetElement = activeTab.querySelector('.video-container');
+                        if (targetElement) {
+                            targetElement.after(errorElement);
+                        } else {
+                            activeTab.prepend(errorElement);
+                        }
+                    }
+                }
+            }
+
+            // Show info message
+            function showInfoMessage(message) {
+                const infoElement = document.createElement('div');
+                infoElement.className = 'message info';
+                infoElement.textContent = message;
+
+                const activeTab = document.querySelector('.tab-content.active');
+                if (activeTab) {
+                    const existingMsg = activeTab.querySelector('.message.info:not(#message1):not(#attendanceMessage)');
+                    if (existingMsg) {
+                        existingMsg.textContent = message;
+                    } else {
+                        const targetElement = activeTab.querySelector('.video-container');
+                        if (targetElement) {
+                            targetElement.after(infoElement);
+                        }
+                    }
+                }
+
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    if (infoElement.parentNode) {
+                        infoElement.remove();
+                    }
+                }, 5000);
+            }
+
+            // Check if face is detected in the video
+            function checkFaceDetection(videoElement, statusElement, guideElement) {
+                if (!videoElement || videoElement.readyState < 2) return; // Video not ready yet
+
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = videoElement.videoWidth || 640;
+                    canvas.height = videoElement.videoHeight || 480;
+                    const ctx = canvas.getContext('2d');
+
+                    if (!ctx) {
+                        console.error("Failed to get canvas context");
+                        return;
+                    }
+
+                    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+                    const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+
+                    fetch('/check_face', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `image=${encodeURIComponent(dataURL)}&assess_quality=true`
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok: ' + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            if (data.face_detected) {
+                                statusElement.textContent = 'Face Detected';
+                                statusElement.classList.add('detected');
+                                guideElement.classList.add('detected');
+
+                                // Store face quality if available
+                                if (data.quality !== undefined) {
+                                    faceQuality = data.quality;
+
+                                    // Update quality indicator
+                                    qualityLevel.style.width = `${faceQuality * 100}%`;
+
+                                    // Update quality text based on score
+                                    if (faceQuality < 0.3) {
+                                        qualityText.textContent = 'Poor';
+                                        qualityLevel.style.backgroundColor = '#F44336';
+                                    } else if (faceQuality < 0.6) {
+                                        qualityText.textContent = 'Medium';
+                                        qualityLevel.style.backgroundColor = '#FF9800';
+                                    } else {
+                                        qualityText.textContent = 'Good';
+                                        qualityLevel.style.backgroundColor = '#4CAF50';
+                                    }
+
+                                    // Auto-capture if in auto-capture mode and quality is good
+                                    if (isAutoCapturing && faceQuality >= QUALITY_THRESHOLD) {
+                                        const now = Date.now();
+                                        if (now - lastCaptureTime > CAPTURE_DELAY && capturedImages.length < MAX_IMAGES) {
+                                            captureFaceImage();
+                                            lastCaptureTime = now;
+                                        }
+                                    }
+                                }
+
+                                // Enable recognition button in attendance tab
+                                if (videoElement === videoAttendance) {
+                                    recognizeBtn.disabled = false;
+                                    faceDetectedAttendance = true;
+                                } else {
+                                    faceDetected = true;
+                                }
+                            } else {
+                                statusElement.textContent = 'Face Not Detected';
+                                statusElement.classList.remove('detected');
+                                guideElement.classList.remove('detected');
+
+                                // Disable recognition button in attendance tab
+                                if (videoElement === videoAttendance) {
+                                    recognizeBtn.disabled = true;
+                                    faceDetectedAttendance = false;
+                                } else {
+                                    faceDetected = false;
+                                }
+                            }
+                        } else {
+                            console.error('Error in face detection:', data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking face:', error);
+                        // Don't show an error message here as it might spam the UI
+                    });
+                } catch (error) {
+                    console.error('Error in face detection:', error);
+                }
+            }
+
+            // Start face detection interval for registration
+            function startFaceDetection() {
+                clearInterval(faceDetectionInterval);
+                faceDetectionInterval = setInterval(() => {
+                    checkFaceDetection(video, faceStatus, faceGuide);
+                }, 500);
+            }
+
+            // Start face detection interval for attendance
+            function startFaceDetectionAttendance() {
+                clearInterval(faceDetectionInterval);
+                faceDetectionInterval = setInterval(() => {
+                    checkFaceDetection(videoAttendance, faceStatusAttendance, faceGuideAttendance);
+                }, 500);
+            }
+
+            // Register form submission
+            registerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const workerId = document.getElementById('workerId').value.trim();
+                const workerName = document.getElementById('nameInput').value.trim();
+                const workerType = document.getElementById('workerType').value;
+
+                if (!workerId || !workerName || !workerType) {
+                    showErrorMessage('Please fill in all required fields');
+                    return;
+                }
+
+                // Check if worker ID already exists
+                fetch(`/check_worker_id?worker_id=${encodeURIComponent(workerId)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.exists) {
+                            showErrorMessage(`Worker ID ${workerId} already exists. Please use a different ID.`);
+                        } else {
+                            // Store for later registration
+                            currentWorkerId = workerId;
+                            currentWorkerName = workerName;
+                            currentWorkerType = workerType;
+
+                            // Hide form and show camera
+                            registerForm.classList.add('hidden');
+                            captureContainer.classList.remove('hidden');
+
+                            // Reset captured images
+                            capturedImages = [];
+                            captureCountElement.textContent = '0';
+                            progressBar.style.width = '0%';
+                            progressBar.textContent = '0%';
+                            faceScanPreview.innerHTML = '';
+                            saveProfileBtn.classList.add('hidden');
+
+                            // Start auto-capture
+                            isAutoCapturing = true;
+                            showInfoMessage('Auto-capturing face images. Please look directly at the camera.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking worker ID:', error);
+                        showErrorMessage('Error checking worker ID. Please try again.');
+                    });
+            });
+
+            // Cancel capture button
+            cancelCaptureBtn.addEventListener('click', function() {
+                registerForm.classList.remove('hidden');
+                captureContainer.classList.add('hidden');
+                isAutoCapturing = false;
+            });
+
+            // Capture face image
+            function captureFaceImage() {
+                if (!video || video.readyState < 2) return;
+
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                const ctx = canvas.getContext('2d');
+
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+
+                // Add to captured images array
+                capturedImages.push(dataURL);
+
+                // Update UI
+                captureCountElement.textContent = capturedImages.length;
+                const progress = (capturedImages.length / MAX_IMAGES) * 100;
+                progressBar.style.width = `${progress}%`;
+                progressBar.textContent = `${Math.round(progress)}%`;
+
+                // Create preview image
+                const img = document.createElement('img');
+                img.src = dataURL;
+                img.className = 'face-preview-img';
+                faceScanPreview.appendChild(img);
+
+                // Show save button when all images are captured
+                if (capturedImages.length >= MAX_IMAGES) {
+                    saveProfileBtn.classList.remove('hidden');
+                    isAutoCapturing = false;
+                    autoCaptureStatus.textContent = 'All required images captured. Ready to register.';
+                }
+            }
+
+            // Save profile button
+            saveProfileBtn.addEventListener('click', function() {
+                if (capturedImages.length < MAX_IMAGES) {
+                    showErrorMessage(`Please capture ${MAX_IMAGES} face images before saving.`);
+                    return;
+                }
+
+                const data = {
+                    worker_id: currentWorkerId,
+                    name: currentWorkerName,
+                    worker_type: currentWorkerType,
+                    face_images: capturedImages
+                };
+
+                saveProfileBtn.disabled = true;
+                saveProfileBtn.innerHTML = '<span class="spinner"></span> Registering...';
+
+                fetch('/register_worker', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showSuccessMessage(`Worker ${currentWorkerName} (ID: ${currentWorkerId}) registered successfully.`);
+
+                        // Reset form and UI
+                        registerForm.reset();
+                        registerForm.classList.remove('hidden');
+                        captureContainer.classList.add('hidden');
+
+                        // Update worker count
+                        checkSystemStatus();
+                    } else {
+                        showErrorMessage(`Registration failed: ${data.message}`);
+                    }
+
+                    saveProfileBtn.disabled = false;
+                    saveProfileBtn.textContent = 'Register Face Profile';
+                })
+                .catch(error => {
+                    console.error('Error registering worker:', error);
+                    showErrorMessage('Error registering worker. Please try again.');
+
+                    saveProfileBtn.disabled = false;
+                    saveProfileBtn.textContent = 'Register Face Profile';
+                });
+            });
+
+            // Show success message
+            function showSuccessMessage(message) {
+                const successElement = document.createElement('div');
+                successElement.className = 'message success';
+                successElement.textContent = message;
+
+                const activeTab = document.querySelector('.tab-content.active');
+                if (activeTab) {
+                    const existingMsg = activeTab.querySelector('.message.success');
+                    if (existingMsg) {
+                        existingMsg.textContent = message;
+                    } else {
+                        activeTab.prepend(successElement);
+                    }
+                }
+
+                // Auto-remove after 10 seconds
+                setTimeout(() => {
+                    if (successElement.parentNode) {
+                        successElement.remove();
+                    }
+                }, 10000);
+            }
+
+            // Recognize button
+            recognizeBtn.addEventListener('click', function() {
+                if (!faceDetectedAttendance) {
+                    showErrorMessage('No face detected. Please position your face in the guide area.');
+                    return;
+                }
+
+                recognizeWorker();
+            });
+
+            // Auto recognize button
+            autoRecognizeBtn.addEventListener('click', function() {
+                if (isAutoRecognizing) {
+                    stopAutoRecognize();
+                } else {
+                    startAutoRecognize();
+                }
+            });
+
+            // Start auto recognize
+            function startAutoRecognize() {
+                isAutoRecognizing = true;
+                autoRecognizeBtn.textContent = 'Stop Auto Recognition';
+                attendanceMessage.textContent = 'Auto recognition is active. Looking for workers...';
+
+                clearInterval(autoRecognizeInterval);
+                autoRecognizeInterval = setInterval(() => {
+                    if (faceDetectedAttendance && !isProcessingRecognition) {
+                        const now = Date.now();
+                        if (now - lastRecognitionTime > RECOGNITION_COOLDOWN) {
+                            recognizeWorker();
+                            lastRecognitionTime = now;
+                        }
+                    }
+                }, 1000);
+            }
+
+            // Stop auto recognize
+            function stopAutoRecognize() {
+                isAutoRecognizing = false;
+                clearInterval(autoRecognizeInterval);
+                autoRecognizeBtn.textContent = 'Auto Recognition';
+                attendanceMessage.textContent = 'Ready to recognize workers';
+            }
+
+            // Recognize worker function
+            function recognizeWorker() {
+                if (!videoAttendance || videoAttendance.readyState < 2) return;
+
+                isProcessingRecognition = true;
+                recognizeBtn.disabled = true;
+                recognizeBtn.innerHTML = '<span class="spinner"></span> Processing...';
+                attendanceMessage.textContent = 'Processing recognition...';
+
+                const canvas = document.createElement('canvas');
+                canvas.width = videoAttendance.videoWidth || 640;
+                canvas.height = videoAttendance.videoHeight || 480;
+                const ctx = canvas.getContext('2d');
+
+                ctx.drawImage(videoAttendance, 0, 0, canvas.width, canvas.height);
+                const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+
+                fetch('/recognize_worker', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `image=${encodeURIComponent(dataURL)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.worker_found) {
+                            showSuccessMessage(`Worker recognized: ${data.name} (ID: ${data.worker_id})`);
+                            attendanceMessage.className = 'message success';
+                            attendanceMessage.textContent = `${data.name} (${data.worker_id}) - ${data.status} at ${data.time}`;
+
+                            // Update attendance table
+                            updateAttendanceTable();
+                        } else {
+                            attendanceMessage.className = 'message error';
+                            attendanceMessage.textContent = 'Worker not recognized. Please try again or register this worker.';
+                        }
+                    } else {
+                        attendanceMessage.className = 'message error';
+                        attendanceMessage.textContent = `Recognition failed: ${data.message}`;
+                    }
+
+                    recognizeBtn.disabled = false;
+                    recognizeBtn.textContent = 'Recognize';
+                    isProcessingRecognition = false;
+                })
+                .catch(error => {
+                    console.error('Error recognizing worker:', error);
+                    attendanceMessage.className = 'message error';
+                    attendanceMessage.textContent = 'Error connecting to server. Please try again.';
+
+                    recognizeBtn.disabled = false;
+                    recognizeBtn.textContent = 'Recognize';
+                    isProcessingRecognition = false;
+                });
+            }
+
+            // Update attendance table
+            function updateAttendanceTable() {
+                const date = dateSelector.value;
+                const attendanceData = document.getElementById('attendanceData');
+
+                attendanceData.innerHTML = '<tr><td colspan="7">Loading records...</td></tr>';
+
+                fetch(`/get_attendance?date=${date}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (data.records && data.records.length > 0) {
+                                attendanceData.innerHTML = '';
+
+                                data.records.forEach(record => {
+                                    const row = document.createElement('tr');
+
+                                    row.innerHTML = `
+                                        <td>${record.worker_id}</td>
+                                        <td>${record.name}</td>
+                                        <td>${record.worker_type}</td>
+                                        <td>${record.date}</td>
+                                        <td>${record.status}</td>
+                                        <td>${record.check_in || 'N/A'}</td>
+                                        <td>${record.check_out || 'N/A'}</td>
+                                    `;
+
+                                    attendanceData.appendChild(row);
+                                });
+                            } else {
+                                attendanceData.innerHTML = '<tr><td colspan="7">No records found for this date.</td></tr>';
+                            }
+                        } else {
+                            attendanceData.innerHTML = `<tr><td colspan="7">Error loading records: ${data.message}</td></tr>`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching attendance records:', error);
+                        attendanceData.innerHTML = '<tr><td colspan="7">Error connecting to server. Please try again.</td></tr>';
+                    });
+            }
+
+            // Refresh attendance button
+            refreshAttendanceBtn.addEventListener('click', function() {
+                updateAttendanceTable();
+            });
+
+            // Load workers for the worker tab
+            function loadWorkers() {
+                const workerList = document.getElementById('workerList');
+
+                workerList.innerHTML = '<div class="worker-item">Loading workers...</div>';
+
+                fetch('/get_workers')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (data.workers && data.workers.length > 0) {
+                                workerList.innerHTML = '';
+
+                                data.workers.forEach(worker => {
+                                    const workerItem = document.createElement('div');
+                                    workerItem.className = 'worker-item';
+
+                                    workerItem.innerHTML = `
+                                        <div class="worker-info">
+                                            <div class="worker-name">${worker.name} (ID: ${worker.worker_id})</div>
+                                            <div class="worker-details">Type: ${worker.worker_type} | Registered: ${worker.registration_date}</div>
+                                        </div>
+                                        <div class="worker-actions">
+                                            <button class="view-worker" data-id="${worker.worker_id}">Details</button>
+                                        </div>
+                                    `;
+
+                                    workerList.appendChild(workerItem);
+                                });
+
+                                // Add event listeners to view buttons
+                                document.querySelectorAll('.view-worker').forEach(button => {
+                                    button.addEventListener('click', function() {
+                                        const workerId = this.getAttribute('data-id');
+                                        viewWorkerDetails(workerId);
+                                    });
+                                });
+                            } else {
+                                workerList.innerHTML = '<div class="worker-item">No workers registered yet.</div>';
+                            }
+                        } else {
+                            workerList.innerHTML = `<div class="worker-item">Error loading workers: ${data.message}</div>`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching workers:', error);
+                        workerList.innerHTML = '<div class="worker-item">Error connecting to server. Please try again.</div>';
+                    });
+            }
+
+            // View worker details
+            function viewWorkerDetails(workerId) {
+                fetch(`/get_worker_details?worker_id=${workerId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Create a modal or overlay to display worker details
+                            const modal = document.createElement('div');
+                            modal.className = 'modal';
+
+                            modal.innerHTML = `
+                                <div class="modal-content">
+                                    <span class="close-modal">&times;</span>
+                                    <h2>Worker Details</h2>
+                                    <div class="worker-detail-item">
+                                        <strong>ID:</strong> ${data.worker.worker_id}
+                                    </div>
+                                    <div class="worker-detail-item">
+                                        <strong>Name:</strong> ${data.worker.name}
+                                    </div>
+                                    <div class="worker-detail-item">
+                                        <strong>Type:</strong> ${data.worker.worker_type}
+                                    </div>
+                                    <div class="worker-detail-item">
+                                        <strong>Registered:</strong> ${data.worker.registration_date}
+                                    </div>
+                                    <div class="worker-detail-item">
+                                        <strong>Last Seen:</strong> ${data.worker.last_attendance || 'Never'}
+                                    </div>
+                                    <h3>Recent Attendance</h3>
+                                    <div class="recent-attendance">
+                                        ${data.recent_attendance ? createAttendanceTable(data.recent_attendance) : 'No recent attendance records'}
+                                    </div>
+                                    <div class="modal-actions">
+                                        <button class="edit-worker" data-id="${data.worker.worker_id}">Edit</button>
+                                        <button class="delete-worker" data-id="${data.worker.worker_id}">Delete</button>
+                                    </div>
+                                </div>
+                            `;
+
+                            document.body.appendChild(modal);
+
+                            // Close modal on X click
+                            modal.querySelector('.close-modal').addEventListener('click', function() {
+                                modal.remove();
+                            });
+
+                            // Close modal when clicking outside
+                            modal.addEventListener('click', function(e) {
+                                if (e.target === modal) {
+                                    modal.remove();
+                                }
+                            });
+
+                            // Edit worker button
+                            modal.querySelector('.edit-worker').addEventListener('click', function() {
+                                // Implement edit functionality
+                                alert('Edit functionality not implemented in this demo');
+                                modal.remove();
+                            });
+
+                            // Delete worker button
+                            modal.querySelector('.delete-worker').addEventListener('click', function() {
+                                if (confirm(`Are you sure you want to delete worker ${data.worker.name}?`)) {
+                                    deleteWorker(data.worker.worker_id);
+                                    modal.remove();
+                                }
+                            });
+                        } else {
+                            showErrorMessage(`Error loading worker details: ${data.message}`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching worker details:', error);
+                        showErrorMessage('Error connecting to server. Please try again.');
+                    });
+            }
+
+            // Create attendance table for worker details
+            function createAttendanceTable(records) {
+                if (!records || records.length === 0) {
+                    return '<p>No attendance records found.</p>';
+                }
+
+                let tableHTML = `
+                    <table class="mini-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Check In</th>
+                                <th>Check Out</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                records.forEach(record => {
+                    tableHTML += `
+                        <tr>
+                            <td>${record.date}</td>
+                            <td>${record.status}</td>
+                            <td>${record.check_in || 'N/A'}</td>
+                            <td>${record.check_out || 'N/A'}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += '</tbody></table>';
+                return tableHTML;
+            }
+
+            // Delete worker
+            function deleteWorker(workerId) {
+                fetch(`/delete_worker?worker_id=${workerId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showSuccessMessage(`Worker ${workerId} deleted successfully.`);
+                            loadWorkers();
+                            checkSystemStatus();
+                        } else {
+                            showErrorMessage(`Error deleting worker: ${data.message}`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting worker:', error);
+                        showErrorMessage('Error connecting to server. Please try again.');
+                    });
+            }
+
+            // Refresh workers button
+            refreshWorkersBtn.addEventListener('click', function() {
+                loadWorkers();
+            });
+
+            // Export workers button
+            exportWorkersBtn.addEventListener('click', function() {
+                exportWorkersBtn.disabled = true;
+                exportWorkersBtn.innerHTML = '<span class="spinner"></span> Exporting...';
+
+                fetch('/export_workers')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.blob();
+                    })
+                    .then(blob => {
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.style.display = 'none';
+                        a.href = url;
+                        a.download = `workers_export_${new Date().toISOString().split('T')[0]}.csv`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+
+                        exportWorkersBtn.disabled = false;
+                        exportWorkersBtn.textContent = 'Export Data';
+                        showSuccessMessage('Worker data exported successfully.');
+                    })
+                    .catch(error => {
+                        console.error('Error exporting workers:', error);
+                        showErrorMessage('Error exporting worker data. Please try again.');
+
+                        exportWorkersBtn.disabled = false;
+                        exportWorkersBtn.textContent = 'Export Data';
+                    });
+            });
+
+            // Add modal styles at runtime to avoid cluttering the initial CSS
+            const modalStyle = document.createElement('style');
+            modalStyle.textContent = `
+                .modal {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 1000;
+                }
+                .modal-content {
+                    background-color: #1a1a1a;
+                    padding: 20px;
+                    border-radius: 10px;
+                    max-width: 600px;
+                    width: 90%;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                    position: relative;
+                    box-shadow: 0 0 20px rgba(255,255,255,0.2);
+                }
+                .close-modal {
+                    position: absolute;
+                    top: 10px;
+                    right: 15px;
+                    font-size: 24px;
+                    cursor: pointer;
+                    color: #ccc;
+                }
+                .close-modal:hover {
+                    color: #fff;
+                }
+                .worker-detail-item {
+                    margin-bottom: 10px;
+                    padding: 5px 0;
+                    border-bottom: 1px solid #333;
+                    color: #ccc;
+                }
+                .modal-actions {
+                    margin-top: 20px;
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 10px;
+                }
+                .mini-table {
+                    width: 100%;
+                    font-size: 14px;
+                    margin-top: 10px;
+                }
+                .recent-attendance {
+                    margin-top: 10px;
+                    max-height: 200px;
+                    overflow-y: auto;
+                    border: 1px solid #333;
+                    border-radius: 5px;
+                    padding: 10px;
+                }
+                .edit-worker {
+                    background-color: #2196F3;
+                    color: #fff;
+                }
+                .delete-worker {
+                    background-color: #F44336;
+                    color: #fff;
+                }
+            `;
+            document.head.appendChild(modalStyle);
+
+            // Initialize with system status check
+            checkSystemStatus();
+
+            // Start with registration tab active
+            initializeVideo(video);
+        });
+    </script>
+</body>
+</html>
